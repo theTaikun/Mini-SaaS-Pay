@@ -33,14 +33,25 @@ On Stripe:
 3. Create Prices → choose "Recurring" (monthly/yearly) and amount.
 4. Note the Price IDs for later.
 
-### Step 4: Confiugure Project
+
+### Step 4: Run the Stripe CLI
+
+```bash
+apt install stripe
+stripe login
+stripe listen --forward-to localhost:5000/webhook
+```
+
+
+### Step 5: Configure Project
 
 Create a Flask secret_key,
 add both Stripe keys,
 and the price_id of the product you just created.
+Also add the endpoint secret from the stripe cli
 
 
-### Step 5: Start The Server
+### Step 6: Start The Server
 
 ```bash
 .venv/bin/python server.py

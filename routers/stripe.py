@@ -40,7 +40,7 @@ def cancel_checkout():
 def stripe_webhook():
     payload = request.data
     sig_header = request.headers.get("Stripe-Signature")
-    endpoint_secret = "whsec_..."  # Get from Stripe webhook setup
+    endpoint_secret = os.getenv("STRIPE_ENDPOINT_SECRET") # Get from Stripe webhook setup
 
     try:
         event = stripe.Webhook.construct_event(
@@ -53,8 +53,8 @@ def stripe_webhook():
 
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
-    # Here, activate the user account / grant access
+        # Here, activate the user account / grant access
         print("Payment succeeded for", session["customer_email"])
 
-    return "", 200
+    return "Success", 200
 
