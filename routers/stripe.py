@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, render_template_string
 import os
 import stripe
 
@@ -26,7 +26,15 @@ def create_checkout_session():
     except Exception as e:
         return jsonify(error=str(e)), 400
 
+@stripe_bp.route("/success", methods=["GET"])
+def successful_checkout():
+    session_id = request.args.get('session_id', '')
+    session = stripe.checkout.Session.retrieve(session_id)
+    return jsonify(session)
 
+@stripe_bp.route("/cancel", methods=["GET"])
+def cancel_checkout():
+    return render_template_string("Oh... Ok Then... :(")
 
 @stripe_bp.route("/webhook", methods=["POST"])
 def stripe_webhook():
