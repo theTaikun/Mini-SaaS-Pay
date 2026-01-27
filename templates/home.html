@@ -1,0 +1,16 @@
+<h1>Hello World</h1>
+<button id="checkout-button">Subscribe</button>
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    const stripe = Stripe("{{ STRIPE_PUBLISHABLE_KEY }}");
+    document.getElementById("checkout-button").addEventListener("click", async () => {
+        const res = await fetch("/create-checkout-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ price_id: "{{ price_id }}"})
+        });
+        const data = await res.json();
+        stripe.redirectToCheckout({ sessionId: data.id });
+    });
+</script>
+
