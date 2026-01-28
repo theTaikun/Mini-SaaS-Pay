@@ -12,7 +12,12 @@ stripe.api_key = STRIPE_SECRET_KEY
 def create_checkout_session():
     try:
         data = request.json
+        new_customer = stripe.Customer.create(
+            email=data["userEmail"]
+        )
+
         session = stripe.checkout.Session.create(
+            customer=new_customer.id,
             payment_method_types=["card"],
             mode="subscription",
             line_items=[{

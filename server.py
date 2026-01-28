@@ -18,6 +18,12 @@ STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
 def home():
     return render_template(
        'home.html',
+       )
+
+@app.route("/register/")
+def register():
+    return render_template(
+       'register.html',
        STRIPE_PUBLISHABLE_KEY=STRIPE_PUBLISHABLE_KEY,
        price_id=os.getenv("STRIPE_RECURRING_PRICE_ID"),
        )

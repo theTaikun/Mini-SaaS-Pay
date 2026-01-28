@@ -1,0 +1,44 @@
+<h1>New Registration</h1>
+<form id="form_registration">
+    <input type="email" name="email" placeholder="fake@example.com" value="fake@example.com" />
+    <input type="password" name="password" placeholder="hunter2" value="hunter2" />
+    <input type="text" name="favecolor" placeholder="red" value="red" />
+    <button type="submit" id="checkout-button">Subscribe</button>
+</form>
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    function createAppUser(data){
+        email = data.get("email");
+        password = data.get("password");
+        color = data.get("favecolor");
+
+        // TODO: Store in app here
+    }
+
+    const stripe = Stripe("{{ STRIPE_PUBLISHABLE_KEY }}");
+    document.getElementById("form_registration").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        formData = new FormData(event.currentTarget);
+
+        /*
+        * Ordering here is important
+        * 1. Create user in app first
+        * 2. Using the new in-app user,
+        *    explicitly create customer,
+        *    rather than letting stripe do it on checkout
+        * 3. Pass the customer to checkout object creation
+        * 4. Redirect user to the checkout
+        */
+        appUser = createAppUser(formData);
+        const res = await fetch("/create-checkout-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            // Pass email directly the from form to here,
+            // Or use return from createAppUser?
+            body: JSON.stringify({ price_id: "{{ price_id }}", userEmail: formData.get("email")})
+        });
+        const data = await res.json();
+        stripe.redirectToCheckout({ sessionId: data.id });
+    });
+</script>
+
