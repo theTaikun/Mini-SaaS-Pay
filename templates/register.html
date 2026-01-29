@@ -7,12 +7,14 @@
 </form>
 <script src="https://js.stripe.com/v3/"></script>
 <script>
-    function createAppUser(data){
-        email = data.get("email");
-        password = data.get("password");
-        color = data.get("favecolor");
-
-        // TODO: Store in app here
+    async function createAppUser(data){
+        user = Object.fromEntries(data);
+        const resu = await fetch("/user", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(user)
+        });
+        return resu;
     }
 
     const stripe = Stripe("{{ STRIPE_PUBLISHABLE_KEY }}");
@@ -29,16 +31,26 @@
         * 3. Pass the customer to checkout object creation
         * 4. Redirect user to the checkout
         */
-        appUser = createAppUser(formData);
-        const res = await fetch("/create-checkout-session", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            // Pass email directly the from form to here,
-            // Or use return from createAppUser?
-            body: JSON.stringify({ price_id: "{{ price_id }}", userEmail: formData.get("email")})
-        });
-        const data = await res.json();
-        stripe.redirectToCheckout({ sessionId: data.id });
+        appUser = await createAppUser(formData);
+        if (appUser.status == 201){
+            console.log("creating in stripe");
+            const res = await fetch("/create-checkout-session", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                // Pass email directly from the form to here,
+                // Or use return from createAppUser?
+                // session id?
+                // Either way this is a security hole,
+                // as user can modify clientside
+                body: JSON.stringify({ price_id: "{{ price_id }}", userEmail: formData.get("email")})
+            });
+            const data = await res.json();
+            stripe.redirectToCheckout({ sessionId: data.id });
+        }
+        else{
+            // TODO: allow checkout even if user existed already
+            console.log("user already exists");
+        }
     });
 </script>
 

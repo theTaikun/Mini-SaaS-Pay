@@ -1,6 +1,11 @@
-from flask import Blueprint, jsonify, request, render_template_string
+from flask import Blueprint, jsonify, request, render_template_string, session
 import os
+from sqlalchemy import select, update
 import stripe
+
+from definitions import SessionLocal
+from models import User
+from utils import syncStripeDataToKV
 
 stripe_bp = Blueprint('stripe', __name__)
 
@@ -16,7 +21,17 @@ def create_checkout_session():
             email=data["userEmail"]
         )
 
-        session = stripe.checkout.Session.create(
+        stmt = (
+            update(User)
+            .where(User.id==session["id"])
+            .values(customer_id=new_customer.id)
+            )
+        with SessionLocal() as conn:
+            conn.execute(stmt)
+            conn.commit()
+            conn.close()
+
+        stripe_session = stripe.checkout.Session.create(
             customer=new_customer.id,
             payment_method_types=["card"],
             mode="subscription",
@@ -24,20 +39,27 @@ def create_checkout_session():
                 "price": data["price_id"],  # Price ID from Stripe
                 "quantity": 1,
                 }],
-            success_url="http://localhost:5000/success?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url="http://localhost:5000/cancel",
+            success_url="http://localhost:5000/success/",
+            cancel_url="http://localhost:5000/cancel/",
             )
-        return jsonify({"id": session.id})
+        return jsonify({"id": stripe_session.id})
     except Exception as e:
         return jsonify(error=str(e)), 400
 
-@stripe_bp.route("/success", methods=["GET"])
+@stripe_bp.route("/success/", methods=["GET"])
 def successful_checkout():
-    session_id = request.args.get('session_id', '')
-    session = stripe.checkout.Session.retrieve(session_id)
-    return jsonify(session)
+    # Rather than using the session_id stripe sends,
+    # pull info using stored customer_id
+    if "id" in session:
+        with SessionLocal() as conn:
+            stmt = select(User.customer_id).where(User.id==session["id"])
+            response = conn.execute(stmt).scalar_one()
+            subData = syncStripeDataToKV(response)
+        return render_template_string(f'Success! Syncing your data, user #{session["id"]}')
+    else:
+        return render_template_string('Please login first <a href="/">Login</a>')
 
-@stripe_bp.route("/cancel", methods=["GET"])
+@stripe_bp.route("/cancel/", methods=["GET"])
 def cancel_checkout():
     return render_template_string("Oh... Ok Then... :(")
 
@@ -57,9 +79,9 @@ def stripe_webhook():
         return "Invalid signature", 400
 
     if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
+        stripe_session = event["data"]["object"]
         # Here, activate the user account / grant access
-        print("Payment succeeded for", session["customer_email"])
+        print("Payment succeeded for", stripe_session["customer_email"])
 
     return "Success", 200
 

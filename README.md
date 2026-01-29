@@ -12,6 +12,9 @@ within an isolated environment.
 It should contain just enough information to allow you to then read the docs,
 for any additional features needed.
 
+* Passwords are stored as plaintext
+* Doesn't cleanly handle all errors
+
 ## How To Use
 
 ### Step 1: Clone this project
