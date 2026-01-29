@@ -3,7 +3,7 @@ import os
 from sqlalchemy import select, update
 import stripe
 
-from definitions import SessionLocal
+from definitions import SessionLocal, STRIPE_EVENT_TYPES
 from models import User
 from utils import syncStripeDataToKV
 
@@ -79,17 +79,18 @@ def stripe_webhook():
 
     try:
         event = stripe.Webhook.construct_event(
-                payload, sig_header, endpoint_secret
-                )
+            payload, sig_header, endpoint_secret
+        )
     except ValueError:
         return "Invalid payload", 400
     except stripe.error.SignatureVerificationError:
         return "Invalid signature", 400
 
-    if event["type"] == "checkout.session.completed":
+    if event["type"] in STRIPE_EVENT_TYPES:
         stripe_session = event["data"]["object"]
-        # Here, activate the user account / grant access
-        print("Payment succeeded for", stripe_session["customer_email"])
+        customer = stripe_session["customer"]
+        print("Webhook initiated for ", customer)
+        subData = syncStripeDataToKV(customer)
 
     return "Success", 200
 
