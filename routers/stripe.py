@@ -55,6 +55,14 @@ def successful_checkout():
             stmt = select(User.customer_id).where(User.id==session["id"])
             response = conn.execute(stmt).scalar_one()
             subData = syncStripeDataToKV(response)
+            stmt = (
+                update(User)
+                .where(User.id==session["id"])
+                .values(**subData)
+            )
+            with SessionLocal() as conn:
+                conn.execute(stmt)
+                conn.commit()
         return render_template_string(f'Success! Syncing your data, user #{session["id"]}')
     else:
         return render_template_string('Please login first <a href="/">Login</a>')
