@@ -1,4 +1,4 @@
 {% block body %}
     <a href="/logout">Logout</a>
-    <pre>{{ data }}</pre>
+    <pre>{{ data | tojson(indent=2) }}</pre>
 {% endblock %}

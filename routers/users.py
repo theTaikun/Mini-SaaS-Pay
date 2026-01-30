@@ -50,7 +50,10 @@ def login_submitted():
         result= response.scalar_one_or_none()
         conn.close()
     if result:
-        session["id"] = result.id
+        res_dict = result.__dict__
+        del res_dict["password"]
+        del res_dict["_sa_instance_state"]
+        session.update(res_dict)
         return jsonify({"status":"Success"}), 200
     else:
         return jsonify({"status":"Invalid Login"}), 401
