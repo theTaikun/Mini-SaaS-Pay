@@ -1,4 +1,7 @@
 {% block body %}
+    {% if session["price_id"]  == price_id %}
+        <a href="/dashboard/premium-feature">Premium Feature</a>
+    {% endif %}
     <a href="/logout">Logout</a>
-    <pre>{{ data | tojson(indent=2) }}</pre>
+    <pre>{{ dict(session) | tojson(indent=2) }}</pre>
 {% endblock %}

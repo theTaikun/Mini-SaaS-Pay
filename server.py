@@ -15,6 +15,7 @@ app.register_blueprint(user_bp)
 
 
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
+STRIPE_RECURRING_PRICE_ID = os.getenv("STRIPE_RECURRING_PRICE_ID")
 
 @app.route("/")
 def home():
@@ -29,7 +30,7 @@ def register():
     return render_template(
        'register.html',
        STRIPE_PUBLISHABLE_KEY=STRIPE_PUBLISHABLE_KEY,
-       price_id=os.getenv("STRIPE_RECURRING_PRICE_ID"),
+       price_id=STRIPE_RECURRING_PRICE_ID,
        )
 
 @app.route("/login/", methods=["GET"])
@@ -43,13 +44,25 @@ def login_page():
 @app.route("/dashboard/")
 def dashboard():
     if "id" in session:
-        s = dict(session)
         return render_template(
             'dashboard.html',
-        data=s
+            price_id=STRIPE_RECURRING_PRICE_ID,
     )
     else:
         return redirect(url_for('login'))
+
+
+@app.route("/dashboard/premium-feature/")
+def premium_feature():
+    if "id" in session:
+        if session["price_id"] == STRIPE_RECURRING_PRICE_ID:
+            return render_template(
+                'premium-feature.html',
+            )
+        else:
+            return redirect(url_for('dashboard'))
+    else:
+        return redirect(url_for('login_page'))
 
 
 if __name__ == "__main__":
