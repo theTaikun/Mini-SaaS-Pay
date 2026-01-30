@@ -58,6 +58,7 @@ def premium_feature():
         if session["price_id"] == STRIPE_RECURRING_PRICE_ID:
             return render_template(
                 'premium-feature.html',
+                price_id=STRIPE_RECURRING_PRICE_ID,
             )
         else:
             return redirect(url_for('dashboard'))
