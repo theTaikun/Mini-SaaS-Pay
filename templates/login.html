@@ -8,18 +8,21 @@
     document.getElementById("form_login").addEventListener("submit", async (event) => {
         event.preventDefault();
         formData = new FormData(event.currentTarget);
-        console.log(formData);
 
-        /*
-        const res = await fetch("/create-checkout-session", {
+        const res = await fetch("/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             // Pass email directly the from form to here,
             // Or use return from createAppUser?
-            body: JSON.stringify({ price_id: "{{ price_id }}", userEmail: formData.get("email")})
+            body: JSON.stringify({username: formData.get("email"), password: formData.get("password") })
         });
-        const data = await res.json();
-        */
+        const data = await res;
+        if (data.status == 200){
+            window.location.replace("/dashboard");
+        }
+        else{
+            console.log("error")
+        }
     });
 </script>
 
