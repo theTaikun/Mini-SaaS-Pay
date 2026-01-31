@@ -63,6 +63,7 @@ def successful_checkout():
             with SessionLocal() as conn:
                 conn.execute(stmt)
                 conn.commit()
+        session.update(subData)
         return render_template_string(f'Success! Syncing your data, user #{session["id"]}')
     else:
         return render_template_string('Please login first <a href="/">Login</a>')
@@ -91,6 +92,20 @@ def stripe_webhook():
         customer = stripe_session["customer"]
         print("Webhook initiated for ", customer)
         subData = syncStripeDataToKV(customer)
+        stmt = (
+            update(User)
+            .where(User.customer_id==customer)
+            .values(**subData)
+        )
+        # TODO: handle user not found
+        # This error occurs if using stripe CLI trigger,
+        #   as it creates a random user, who is not already in app db
+        with SessionLocal() as conn:
+            conn.execute(stmt)
+            conn.commit()
+
+        session.update(subData)
+
 
     return "Success", 200
 
