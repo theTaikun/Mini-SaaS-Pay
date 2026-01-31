@@ -63,7 +63,7 @@ def successful_checkout():
             with SessionLocal() as conn:
                 conn.execute(stmt)
                 conn.commit()
-        session.update(subData)
+        session.update({ "customer_id": response, **subData })
         return render_template_string(f'Success! Syncing your data, user #{session["id"]}')
     else:
         return render_template_string('Please login first <a href="/">Login</a>')
@@ -104,7 +104,7 @@ def stripe_webhook():
             conn.execute(stmt)
             conn.commit()
 
-        session.update(subData)
+        session.update({ "customer_id": customer, **subData})
 
 
     return "Success", 200
