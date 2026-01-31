@@ -2,7 +2,7 @@
 {% block body %}
 <h2>User Dashboard</h2>
     <a href="/dashboard/">Dashboard</a>
-    {% if session["price_id"]  == price_id %}
+    {% if session["price_id"]  == price_id and now() < session["current_period_end"] %}
         <a href="/dashboard/premium-feature">Premium Feature</a>
     {% endif %}
 <a href="/logout">Logout</a>

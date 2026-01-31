@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from flask import Flask, redirect, render_template, session, url_for
 import os
+import time
 
 from definitions import STRIPE_PUBLISHABLE_KEY, STRIPE_RECURRING_PRICE_ID
 from routers.stripe import stripe_bp
@@ -14,6 +15,7 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY")
 app.register_blueprint(stripe_bp)
 app.register_blueprint(user_bp)
 
+app.jinja_env.globals["now"] = time.time
 
 @app.route("/")
 def home():
@@ -53,7 +55,11 @@ def dashboard():
 @app.route("/dashboard/premium-feature/")
 def premium_feature():
     if "id" in session:
-        if session["price_id"] == STRIPE_RECURRING_PRICE_ID:
+        unix_now = time.time()
+        if (
+            session["price_id"] == STRIPE_RECURRING_PRICE_ID
+            and unix_now < session["current_period_end"]
+        ):
             return render_template(
                 'premium-feature.html',
                 price_id=STRIPE_RECURRING_PRICE_ID,
