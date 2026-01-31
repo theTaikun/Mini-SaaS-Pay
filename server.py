@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 from flask import Flask, redirect, render_template, session, url_for
 import os
 
+from definitions import STRIPE_PUBLISHABLE_KEY, STRIPE_RECURRING_PRICE_ID
 from routers.stripe import stripe_bp
 from routers.users import user_bp
 
@@ -13,9 +14,6 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY")
 app.register_blueprint(stripe_bp)
 app.register_blueprint(user_bp)
 
-
-STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
-STRIPE_RECURRING_PRICE_ID = os.getenv("STRIPE_RECURRING_PRICE_ID")
 
 @app.route("/")
 def home():

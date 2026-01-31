@@ -3,7 +3,7 @@ import os
 from sqlalchemy import select, update
 import stripe
 
-from definitions import SessionLocal, STRIPE_EVENT_TYPES
+from definitions import PUBLIC_URL, SessionLocal, STRIPE_EVENT_TYPES
 from models import User
 from utils import syncStripeDataToKV
 
@@ -39,8 +39,8 @@ def create_checkout_session():
                 "price": data["price_id"],  # Price ID from Stripe
                 "quantity": 1,
                 }],
-            success_url="http://localhost:5000/success/",
-            cancel_url="http://localhost:5000/cancel/",
+            success_url=f"{ PUBLIC_URL }/success/",
+            cancel_url=f"{ PUBLIC_URL }/cancel/",
             )
         return jsonify({"id": stripe_session.id})
     except Exception as e:

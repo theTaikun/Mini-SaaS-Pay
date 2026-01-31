@@ -5,6 +5,10 @@ from sqlalchemy.orm import sessionmaker
 
 load_dotenv()
 
+PUBLIC_URL = os.getenv("PUBLIC_URL")
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
+STRIPE_RECURRING_PRICE_ID = os.getenv("STRIPE_RECURRING_PRICE_ID")
+
 engine = create_engine(os.getenv("DB_URI"))
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
