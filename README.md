@@ -9,60 +9,84 @@ This app is for testing only and comes with no warranty or support.
 
 ## How To Use
 
-### Step 1: Clone this project
+### Step 1: Clone this repo
 
 
-### Step 2: Create virtual environment and install required files
+### Step 2: Create the project environment and install required packages
 
-```bash
-python -m venv .venv
-.venv/bin/pip install -r requirements.txt
-```
+1. Create virtual environment
+    ```bash
+    python -m venv .venv
+    .venv/bin/pip install -r requirements.txt
+    ```
+2. Create .env file
+    ```bash
+    cp .env.example .env
+    ```
+3. Generate a Flask secret key, and add it to `.env`
+    ```bash
+    python -c 'import secrets; print(secrets.token_hex())'
+    ```
+4. Set `PUBLIC_URL` in `.env`
+    If you will be running the app on the same workstation you're using,
+    you can leave this as localhost,
+    otherwise set it to the hostname or routable address of the server
 
 
-### Step 3: Create Subscription Product
+### Step 3: Set Up Stripe
 
-On Stripe:
 1. Create a sandbox/test environment
-2. Create Products → give it a name.
-3. Create Prices → choose "Recurring" (monthly/yearly) and amount.
-4. Note the Price IDs for later.
+2. Add the publishable key and secret key to `.env` file
+3. Limit customers to [one subscription](https://docs.stripe.com/payments/checkout/limit-subscriptions)
+4. Create Product(s) → give it a name and description.
+5. Create Prices → choose "Recurring" (monthly/yearly) and amount.
+6. Add the price_id to the `.env` file
 
 
 ### Step 4: Run the Stripe CLI
 
-```bash
-apt install stripe
-stripe login
-stripe listen --forward-to localhost:5000/webhook
-```
+This portion is necessary to allow stripe to reach your local development endpoint,
+since it probably is not internet accessible
+
+1. Install the stripe CLI, such as
+    ```bash
+    apt install stripe
+    ```
+2. Login to your stripe environment
+    ```bash
+    stripe login
+    ```
+3. Run it, specifying the endpoint the app should be listening on
+    ```bash
+    stripe listen --forward-to localhost:5000/webhook
+    ```
+4. Note the endpoint secret displayed, and copy it to the `.env`
 
 
-### Step 5: Configure Project
-
-Create a Flask secret_key,
-add both Stripe keys,
-and the price_id of the product you just created.
-Also add the endpoint secret from the stripe cli
-
-
-### Step 6: Start The Server
+### Step 5: Start The Server
 
 ```bash
 .venv/bin/python server.py
 ```
 
+### Step 6: Use the Web App
+
+In a web browser,
+navigate to the location you configured as `PUBLIC_URL`
+
+
 ## Purpose
 
-It's intention is to show a basic,
-but working Stripe flow.
-It simulates a SaaS app with subscription business model,
+The intention of this project
+is to show a basic, but working Stripe flow.
+It simulates a SaaS app with a subscription business model,
 within an isolated environment.
 The app isn't convoluted by actual features or business logic
 beyond verifying user is current in payments,
-and gatekeeping app access.
-It should contain just enough information to allow you to then read the docs,
-for any additional features needed.
+and gate-keeping app access.
+It should contain just enough information to help familiarize with how to set things up.
+After which, the official documentation can be understood in context,
+and referenced for any additional needed features.
 
 Flask was chosen as a one-stop-shop for both backend and frontend.
 This simplifies the codebase,
