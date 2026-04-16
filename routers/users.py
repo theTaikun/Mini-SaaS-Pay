@@ -1,11 +1,33 @@
 from flask import Blueprint, jsonify, redirect, request, session, url_for
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.dialects.sqlite import insert
 
 from definitions import SessionLocal
 from models import User
 
 user_bp = Blueprint('user_bp', __name__)
+
+
+def complete_onboarding():
+    stmt = (
+        update(User)
+        .where(User.id==session["id"])
+        .values(onboarding_completed = True)
+        )
+    with SessionLocal() as conn:
+        conn.execute(stmt)
+        conn.commit()
+        conn.close()
+    session["onboarding_completed"] = True
+
+
+@user_bp.route("/user", methods=["PATCH"])
+def update_user():
+    data = request.json
+    if data["onboarded"]:
+        complete_onboarding()
+    return "Success", 200
+
 
 @user_bp.route("/user", methods=["POST"])
 def add_user():
@@ -26,7 +48,7 @@ def add_user():
                     "password": data["password"],
                 }
             )
-            .on_conflict_do_nothing(
+            .on_conflict_do_nothing( # TODO: handle conflict? shouldn't happen
                 index_elements=["email"],
             )
             .returning(User.id)
@@ -34,7 +56,6 @@ def add_user():
         response = conn.execute(stmt).mappings().one()
         conn.commit()
         conn.close()
-    session["id"] = response.id
     return dict(response), 201
 
 

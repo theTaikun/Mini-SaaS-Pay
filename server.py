@@ -29,8 +29,6 @@ def register():
         return redirect(url_for('dashboard'))
     return render_template(
        'register.html',
-       STRIPE_PUBLISHABLE_KEY=STRIPE_PUBLISHABLE_KEY,
-       price_id=STRIPE_RECURRING_PRICE_ID,
        )
 
 @app.route("/login/", methods=["GET"])
@@ -41,15 +39,29 @@ def login_page():
        'login.html',
     )
 
+@app.route("/onboarding/", methods=["GET"])
+def onboarding_page():
+    if "id" in session:
+        if not session["onboarding_completed"]:
+            return render_template(
+                'onboarding.html',
+                price_id=STRIPE_RECURRING_PRICE_ID,
+                STRIPE_PUBLISHABLE_KEY=STRIPE_PUBLISHABLE_KEY,
+            )
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('login_page'))
+
 @app.route("/dashboard/")
 def dashboard():
     if "id" in session:
+        if not session["onboarding_completed"]:
+            return redirect(url_for('onboarding_page'))
         return render_template(
             'dashboard.html',
             price_id=STRIPE_RECURRING_PRICE_ID,
     )
     else:
-        return redirect(url_for('login'))
+        return redirect(url_for('login_page'))
 
 
 @app.route("/dashboard/premium-feature/")

@@ -5,8 +5,10 @@
     <input type="text" name="favecolor" placeholder="red" value="red" />
     <button type="submit" id="checkout-button">Subscribe</button>
 </form>
-<script src="https://js.stripe.com/v3/"></script>
 <script>
+
+    const searchParams = new URLSearchParams(window.location.search);
+
     async function createAppUser(data){
         user = Object.fromEntries(data);
         const resu = await fetch("/user", {
@@ -17,7 +19,6 @@
         return resu;
     }
 
-    const stripe = Stripe("{{ STRIPE_PUBLISHABLE_KEY }}");
     document.getElementById("form_registration").addEventListener("submit", async (event) => {
         event.preventDefault();
         formData = new FormData(event.currentTarget);
@@ -33,19 +34,7 @@
         */
         appUser = await createAppUser(formData);
         if (appUser.status == 201){
-            console.log("creating in stripe");
-            const res = await fetch("/create-checkout-session", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                // Pass email directly from the form to here,
-                // Or use return from createAppUser?
-                // session id?
-                // Either way this is a security hole,
-                // as user can modify clientside
-                body: JSON.stringify({ price_id: "{{ price_id }}", userEmail: formData.get("email")})
-            });
-            const data = await res.json();
-            stripe.redirectToCheckout({ sessionId: data.id });
+            console.log("created user");
         }
         else{
             // TODO: allow checkout even if user existed already

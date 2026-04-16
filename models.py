@@ -17,6 +17,7 @@ class User(Base):
         nullable=False,
         default=lambda: datetime.datetime.now(datetime.UTC).isoformat().replace("+00:00","Z"),
         )
+    onboarding_completed = Column(Boolean, nullable=False, default=False)
 
     # -----------
     # Stripe Data

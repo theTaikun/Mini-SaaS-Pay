@@ -6,6 +6,7 @@ import stripe
 from definitions import PUBLIC_URL, SessionLocal, STRIPE_EVENT_TYPES
 from models import User
 from utils import syncStripeDataToKV
+from routers.users import complete_onboarding
 
 stripe_bp = Blueprint('stripe', __name__)
 
@@ -64,7 +65,8 @@ def successful_checkout():
                 conn.execute(stmt)
                 conn.commit()
         session.update({ "customer_id": response, **subData })
-        return render_template_string(f'Success! Syncing your data, user #{session["id"]}')
+        complete_onboarding()
+        return render_template_string(f'Success! Syncing your data, user #{session["id"]} <a href="/">Login</a>')
     else:
         return render_template_string('Please login first <a href="/">Login</a>')
 
@@ -92,6 +94,7 @@ def stripe_webhook():
         customer = stripe_session["customer"]
         print("Webhook initiated for ", customer)
         subData = syncStripeDataToKV(customer)
+        subData["onboarding_completed"] = True # reimplemented since other function requires users.id
         stmt = (
             update(User)
             .where(User.customer_id==customer)
