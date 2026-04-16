@@ -1,3 +1,5 @@
+{% extends 'base.html' %}
+{% block body %}
 <h1>Login</h1>
 <form id="form_login">
     <input type="email" name="email" placeholder="fake@example.com" value="fake@example.com" />
@@ -12,8 +14,8 @@
         const res = await fetch("/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            // Pass email directly the from form to here,
-            // Or use return from createAppUser?
+            // Pass email directly from the form to here,
+            // Or use return value from createAppUser?
             body: JSON.stringify({username: formData.get("email"), password: formData.get("password") })
         });
         const data = await res;
@@ -25,4 +27,4 @@
         }
     });
 </script>
-
+{% endblock %}
