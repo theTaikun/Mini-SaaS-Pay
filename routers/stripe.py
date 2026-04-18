@@ -1,71 +1,26 @@
 from flask import Blueprint, jsonify, request, render_template_string, session
-import os
-from sqlalchemy import select, update
-import stripe
 
-from definitions import PUBLIC_URL, SessionLocal, STRIPE_EVENT_TYPES
-from models import User
-from utils import syncStripeDataToKV
-from routers.users import complete_onboarding
+from services.stripe_service import create_stripe_customer, create_stripe_checkout, create_new_stripe_checkout, get_user_by_id, stripe_successful_payment, stripe_webhook_handler
 
 stripe_bp = Blueprint('stripe', __name__)
-
-STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
-stripe.api_key = STRIPE_SECRET_KEY
 
 
 @stripe_bp.route("/create-checkout-session", methods=["POST"])
 def create_checkout_session():
+    data = request.json
     try:
-        data = request.json
-        new_customer = stripe.Customer.create(
-            email=data["userEmail"]
-        )
-
-        stmt = (
-            update(User)
-            .where(User.id==session["id"])
-            .values(customer_id=new_customer.id)
-            )
-        with SessionLocal() as conn:
-            conn.execute(stmt)
-            conn.commit()
-            conn.close()
-
-        stripe_session = stripe.checkout.Session.create(
-            customer=new_customer.id,
-            payment_method_types=["card"],
-            mode="subscription",
-            line_items=[{
-                "price": data["price_id"],  # Price ID from Stripe
-                "quantity": 1,
-                }],
-            success_url=f"{ PUBLIC_URL }/success/",
-            cancel_url=f"{ PUBLIC_URL }/cancel/",
-            )
+        stripe_session = create_new_stripe_checkout(user_email=data["userEmail"], price_id = data["price_id"])
         return jsonify({"id": stripe_session.id})
     except Exception as e:
         return jsonify(error=str(e)), 400
 
 @stripe_bp.route("/success/", methods=["GET"])
-def successful_checkout():
+def successful_checkout_endpoint():
     # Rather than using the session_id stripe sends,
     # pull info using stored customer_id
     if "id" in session:
-        with SessionLocal() as conn:
-            stmt = select(User.customer_id).where(User.id==session["id"])
-            response = conn.execute(stmt).scalar_one()
-            subData = syncStripeDataToKV(response)
-            stmt = (
-                update(User)
-                .where(User.id==session["id"])
-                .values(**subData)
-            )
-            with SessionLocal() as conn:
-                conn.execute(stmt)
-                conn.commit()
-        session.update({ "customer_id": response, **subData })
-        complete_onboarding()
+        subData_onboarding_cust_id = stripe_successful_payment(app_user_id = session["id"])
+        session.update(subData_onboarding_cust_id)
         return render_template_string(f'Success! Syncing your data, user #{session["id"]} <a href="/">Login</a>')
     else:
         return render_template_string('Please login first <a href="/">Login</a>')
@@ -75,40 +30,11 @@ def cancel_checkout():
     return render_template_string("Oh... Ok Then... :(")
 
 @stripe_bp.route("/webhook", methods=["POST"])
-def stripe_webhook():
-    payload = request.data
-    sig_header = request.headers.get("Stripe-Signature")
-    endpoint_secret = os.getenv("STRIPE_ENDPOINT_SECRET") # Get from Stripe webhook setup
-
+def webhook_endpoint():
     try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, endpoint_secret
-        )
-    except ValueError:
-        return "Invalid payload", 400
-    except stripe.error.SignatureVerificationError:
-        return "Invalid signature", 400
-
-    if event["type"] in STRIPE_EVENT_TYPES:
-        stripe_session = event["data"]["object"]
-        customer = stripe_session["customer"]
-        print("Webhook initiated for ", customer)
-        subData = syncStripeDataToKV(customer)
-        subData["onboarding_completed"] = True # reimplemented since other function requires users.id
-        stmt = (
-            update(User)
-            .where(User.customer_id==customer)
-            .values(**subData)
-        )
-        # TODO: handle user not found
-        # This error occurs if using stripe CLI trigger,
-        #   as it creates a random user, who is not already in app db
-        with SessionLocal() as conn:
-            conn.execute(stmt)
-            conn.commit()
-
-        session.update({ "customer_id": customer, **subData})
-
-
+        subData = stripe_webhook_handler(request)
+        session.update(subData)
+    except Exception as e:
+        return str(e), 400 # TODO: don't expose internal errors, predefine string
     return "Success", 200
 
