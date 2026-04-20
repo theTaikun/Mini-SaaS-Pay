@@ -6,11 +6,11 @@ Sometimes when building a large complex system,
 it helps to first start by isolating the major problems.
 To do this,
 I built the major portions of a small Software as a Service (SaaS) app
-independetly from eachother.
+independently from each other.
 This was used to learn how these portions should work individually,
 rather than trying to learn it all at once.
 
-The different projects invovled are:
+The different projects involved are:
 
 * [Mini-SaaS-Auth](https://github.com/theTaikun/Mini-SaaS-Auth):
     Integrating Supabase for authentication only.
@@ -106,7 +106,8 @@ within an isolated environment.
 The app isn't convoluted by actual features or business logic
 beyond verifying user is current in payments,
 and gate-keeping app access.
-It should contain just enough information to help familiarize with how to set things up.
+It should contain just enough information to help familiarize developers
+with how to properly set things up.
 After which, the official documentation can be understood in context,
 and referenced for any additional needed features.
 
@@ -120,13 +121,13 @@ Based in part on [t3dotgg/stripe-recommendations](https://github.com/t3dotgg/str
 ## Integration
 
 If this repo is to be used in another project,
-here are some recommendations for implentation.
+here are some recommendations for implementation.
 
 Build authentication first.
 Proper modern auth is beyond the scope of this project,
 and passwords are being stored plaintext.
-You will have to implement authorization yourself,
-don't use the auth system of this repo.
+You will have to implement authorization yourself.
+**Don't use the auth system of this repo.**
 There are tons of resources out there if you don't know how to do this.
 Decide which pages and features will be public,
 and which will be locked behind different paywalls.
@@ -139,7 +140,7 @@ as adding it later was more difficult.
 Don't fork this repo and build an app off it,
 you're better off starting from scratch,
 and using tailored versions of my methods as needed.
-Take the time to Understand what this project does and how it works,
+Take the time to understand what this project does and how it works,
 and then you can decide what you need,
 what you don't,
 and what to research more.
@@ -150,3 +151,9 @@ and build error handling around that.
 For instance,
 plan for the case where Stripe's servers go down and are unreachable,
 or the API responds in a format not expected.
+
+
+## Development
+
+1. Install the the packages of `requirements-dev.py`
+2. Run `pytest` within the environment
