@@ -2,8 +2,6 @@ import datetime
 from sqlalchemy import Column, Boolean, DateTime, Integer, String
 from sqlalchemy.orm import  declarative_base
 
-from definitions import engine
-
 Base = declarative_base()
 
 class User(Base):
@@ -30,5 +28,3 @@ class User(Base):
     current_period_end = Column(Integer, nullable=True)
     cancel_at_period_end = Column(Boolean, nullable=True)
 
-
-Base.metadata.create_all(engine)

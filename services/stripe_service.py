@@ -1,8 +1,9 @@
 import os
+from flask import g
 from sqlalchemy import select, update
 import stripe
 
-from definitions import PUBLIC_URL, SessionLocal, STRIPE_EVENT_TYPES
+from definitions import get_db, PUBLIC_URL, STRIPE_EVENT_TYPES
 from models import User
 from routers.users import complete_onboarding
 
@@ -48,7 +49,7 @@ def create_stripe_customer(user_email):
         .where(User.email == user_email)
         .values(customer_id = new_customer.id)
         )
-    with SessionLocal() as conn:
+    with get_db() as conn:
         conn.execute(stmt)
         conn.commit()
         conn.close()
@@ -83,7 +84,7 @@ def get_user_by_id(user_id):
         .where(User.id == user_id)
         .values(customer_id = customer.id)
         )
-    with SessionLocal() as conn:
+    with get_db() as conn:
         conn.execute(stmt)
         conn.commit()
         conn.close()
@@ -91,7 +92,7 @@ def get_user_by_id(user_id):
 
 
 def stripe_successful_payment(app_user_id):
-        with SessionLocal() as conn:
+        with get_db() as conn:
             stmt = select(User.customer_id).where(User.id==app_user_id)
             customer_id = conn.execute(stmt).scalar_one()
             subData = syncStripeDataToKV(customer_id)
@@ -138,7 +139,7 @@ def stripe_webhook_handler(request):
         # TODO: handle user not found
         # This error occurs if using stripe CLI trigger,
         #   as it creates a random user, who is not already in app db
-        with SessionLocal() as conn:
+        with get_db() as conn:
             conn.execute(stmt)
             conn.commit()
 

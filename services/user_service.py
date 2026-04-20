@@ -1,7 +1,8 @@
+from flask import g
 from sqlalchemy import select, update
 from sqlalchemy.dialects.sqlite import insert
 
-from definitions import SessionLocal
+from definitions import get_db
 from models import User
 
 
@@ -9,7 +10,7 @@ def create_user(username, password):
     stmt = (
         select(User).where(User.email==username)
         )
-    with SessionLocal() as conn:
+    with get_db() as conn:
         response = conn.execute(stmt).one_or_none()
         if response:
             raise Exception
@@ -37,7 +38,7 @@ def login_user(username, password):
         select(User)
         .where(User.email==username, User.password==password)
     )
-    with SessionLocal() as conn:
+    with get_db() as conn:
         response = conn.execute(stmt)
         result= response.scalar_one_or_none()
         conn.close()
@@ -55,7 +56,7 @@ def complete_onboarding(app_user_id):
         .where(User.id==app_user_id)
         .values(onboarding_completed = True)
         )
-    with SessionLocal() as conn:
+    with get_db() as conn:
         conn.execute(stmt)
         conn.commit()
         conn.close()
