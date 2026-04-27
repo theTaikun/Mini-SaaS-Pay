@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, redirect, request, session, url_for
 
 from services.user_service import complete_onboarding, create_user, login_user
+from services.stripe_service import create_stripe_customer
 
 user_bp = Blueprint('user_bp', __name__)
 
@@ -14,15 +15,19 @@ def update_user_endpoint():
     return "Success", 200
 
 
+# TODO: Create stripe customer first? so single User creation and no update?
 @user_bp.route("/user", methods=["POST"])
 def new_user_endpoint():
     data = request.json
     try:
-        response = create_user(username=data["email"], password=data["password"])
-        return dict(response), 201
+        app_user_id = create_user(username=data["email"], password=data["password"])
     except:
         return jsonify(error="user already exists"), 409
 
+    # TODO: Pass app_user_id rather than email?
+    stripe_customer = create_stripe_customer(data["email"])
+
+    return { "id": app_user_id }, 201
 
 @user_bp.route("/login/", methods=["POST"])
 def login_endpoint():

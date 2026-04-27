@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, render_template_string, session
 
-from services.stripe_service import create_stripe_customer, create_stripe_checkout, create_new_stripe_checkout, get_user_by_id, stripe_successful_payment, stripe_webhook_handler
+from services.stripe_service import create_stripe_customer, create_stripe_checkout, create_new_stripe_checkout, get_user_by_stripe_id, stripe_successful_payment, stripe_webhook_handler
 
 stripe_bp = Blueprint('stripe', __name__)
 

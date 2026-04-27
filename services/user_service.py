@@ -7,31 +7,16 @@ from models import User
 
 
 def create_user(username, password):
-    stmt = (
-        select(User).where(User.email==username)
+    user = User(
+        email=username,
+        password=password,
         )
     with get_db() as conn:
-        response = conn.execute(stmt).one_or_none()
-        if response:
-            raise Exception
+        conn.add(user)
+        id = user.id
+        conn.commit() # this line will raise exception if unique constraint fail
 
-        stmt = (
-            insert(User)
-            .values(
-                {
-                    "email": username,
-                    "password": password,
-                }
-            )
-            .on_conflict_do_nothing( # TODO: handle conflict? shouldn't happen
-                index_elements=["email"],
-            )
-            .returning(User.id)
-        )
-        response = conn.execute(stmt).mappings().one()
-        conn.commit()
-        conn.close()
-    return response
+    return id
 
 def login_user(username, password):
     stmt = (
@@ -60,5 +45,3 @@ def complete_onboarding(app_user_id):
         conn.execute(stmt)
         conn.commit()
         conn.close()
-
-

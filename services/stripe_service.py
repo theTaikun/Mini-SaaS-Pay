@@ -5,7 +5,7 @@ import stripe
 
 from definitions import get_db, PUBLIC_URL, STRIPE_EVENT_TYPES
 from models import User
-from routers.users import complete_onboarding
+from services.user_service import complete_onboarding
 
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 stripe.api_key = STRIPE_SECRET_KEY
@@ -52,7 +52,6 @@ def create_stripe_customer(user_email):
     with get_db() as conn:
         conn.execute(stmt)
         conn.commit()
-        conn.close()
 
     return new_customer
 
@@ -78,16 +77,13 @@ def create_new_stripe_checkout(user_email, price_id):
     return stripe_session
 
 
-def get_user_by_id(user_id):
+def get_user_by_stripe_id(stripe_id):
     stmt = (
         select(User)
-        .where(User.id == user_id)
-        .values(customer_id = customer.id)
+        .where(User.customer_id == stripe_id)
         )
     with get_db() as conn:
-        conn.execute(stmt)
-        conn.commit()
-        conn.close()
+        user = conn.execute(stmt)
     return user
 
 
@@ -144,5 +140,3 @@ def stripe_webhook_handler(request):
             conn.commit()
 
         return { "customer_id": customer, **subData}
-
-
