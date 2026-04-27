@@ -2,7 +2,7 @@ from flask import g
 from sqlalchemy import select, update
 from sqlalchemy.dialects.sqlite import insert
 
-from definitions import get_db
+from definitions import get_db, PROD_MAP
 from models import User
 
 
@@ -45,3 +45,19 @@ def complete_onboarding(app_user_id):
         conn.execute(stmt)
         conn.commit()
         conn.close()
+
+
+def is_enable_premium_feature(app_user_id):
+    stmt = select(User.product_id).where(User.id==app_user_id)
+    with get_db() as conn:
+        product_id = conn.execute(stmt).scalar_one()
+
+    return "PREMIUM_FEATURE" in PROD_MAP[product_id]["features"]
+
+
+def is_enable_ultimate_feature(app_user_id):
+    stmt = select(User.product_id).where(User.id==app_user_id)
+    with get_db() as conn:
+        product_id = conn.execute(stmt).scalar_one()
+
+    return "ULTIMATE_FEATURE" in PROD_MAP[product_id]["features"]

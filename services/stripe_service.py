@@ -3,7 +3,7 @@ from flask import g
 from sqlalchemy import select, update
 import stripe
 
-from definitions import get_db, PUBLIC_URL, STRIPE_EVENT_TYPES
+from definitions import get_db, PUBLIC_URL, STRIPE_EVENT_TYPES, DEFAULT_PRICE_ID
 from models import User
 from services.user_service import complete_onboarding
 
@@ -29,11 +29,12 @@ def syncStripeDataToKV(customerId: str):
         subData = {
             "subscription_id": subscription.id,
             "status": subscription.status,
-            "price_id": subscription["items"]["data"][0].price.id,
-            "current_period_start": subscription_item["current_period_start"],
-            "current_period_end": subscription_item["current_period_end"],
+            "price_id": subscription_item.price.id,
+            "current_period_start": subscription_item.current_period_start,
+            "current_period_end": subscription_item.current_period_end,
             "cancel_at_period_end": subscription.cancel_at_period_end,
             # "payment_method": {}, # recommended by t3dotgg, but not needed
+            "product_id": subscription_item.plan.product,
             }
 
     return subData
@@ -42,6 +43,7 @@ def syncStripeDataToKV(customerId: str):
 def create_stripe_customer(user_email):
     new_customer = stripe.Customer.create(
         email=user_email
+        # TODO: add metadata for stripe side where app_user_id=User.id
     )
 
     stmt = (
@@ -56,10 +58,11 @@ def create_stripe_customer(user_email):
     return new_customer
 
 
-def create_stripe_checkout(customer, price_id):
+def create_stripe_checkout(customer, price_id=DEFAULT_PRICE_ID):
     stripe_session = stripe.checkout.Session.create(
         customer=customer.id,
         payment_method_types=["card"],
+        payment_method_collection="if_required",
         mode="subscription",
         line_items=[{
             "price": price_id,
@@ -75,6 +78,14 @@ def create_new_stripe_checkout(user_email, price_id):
     new_customer = create_stripe_customer(user_email)
     stripe_session = create_stripe_checkout(new_customer, price_id)
     return stripe_session
+
+
+def create_stripe_customer_session(customer_id):
+    customer_session = stripe.v1.customer_sessions.create({
+        "customer": customer_id,
+        "components": {"pricing_table": {"enabled": True}},
+        })
+    return customer_session.client_secret
 
 
 def get_user_by_stripe_id(stripe_id):

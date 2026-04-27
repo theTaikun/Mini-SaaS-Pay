@@ -9,7 +9,10 @@ stripe_bp = Blueprint('stripe', __name__)
 def create_checkout_session():
     data = request.json
     try:
-        stripe_session = create_new_stripe_checkout(user_email=data["userEmail"], price_id = data["price_id"])
+        stripe_session = create_new_stripe_checkout(
+            user_email=data["userEmail"],
+            price_id=data["price_id"]
+            )
         return jsonify({"id": stripe_session.id})
     except Exception as e:
         return jsonify(error=str(e)), 400

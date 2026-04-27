@@ -1,6 +1,7 @@
 __pycache__/
 
 .env
+prod_price_ids.py
 
 *.db
 *.sqlite

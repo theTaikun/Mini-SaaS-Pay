@@ -6,9 +6,9 @@
 <p>Please choose your plan below.</p>
 
 <form id="form_plan">
-    <input type="radio" id="plan_free" name="plan" value="free" />
+    <input type="radio" id="plan_free" name="plan" value="{{ prod_map['free'] }}" />
     <label for="plan_free">Free</label>
-    <input type="radio" id="plan_pro" name="plan" value="pro" />
+    <input type="radio" id="plan_pro" name="plan" value="{{ prod_map['pro'] }}" />
     <label for="plan_pro">Pro</label>
     <button type="submit" id="checkout-button">Submit</button>
 </form>
@@ -17,7 +17,7 @@
     const stripe = Stripe("{{ STRIPE_PUBLISHABLE_KEY }}");
     document.getElementById("form_plan").addEventListener("submit", async (event) => {
         event.preventDefault();
-        const plan = event.currentTarget.plan.value;
+        const selected_price_id = event.currentTarget.plan.value;
 
         /*
         * Ordering here is important
@@ -28,29 +28,22 @@
         * 3. Pass the customer to checkout object creation
         * 4. Redirect user to the checkout
         */
-        if (plan === "pro"){
-            console.log("creating in stripe");
-            const res = await fetch("/create-checkout-session", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                // Pass email from session?
-                // session id?
-                // Either way this is a security hole,
-                // as user can modify clientside
-                body: JSON.stringify({ price_id: "{{ price_id }}", userEmail: "{{ session['email'] }}" })
-            });
-            const data = await res.json();
-            stripe.redirectToCheckout({ sessionId: data.id });
-        }
-        else{
-            console.log("user selected free plan");
-            const onboard_req = await fetch("/user", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ onboarded: true  })
-            });
-            window.location.replace("/dashboard");
-        }
+        console.log("creating in stripe");
+        const res = await fetch("/create-checkout-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            // Pass email from session?
+            // session id?
+            // Either way this is a security hole,
+            // as user can modify clientside
+            // Production system should use token
+            body: JSON.stringify({
+                price_id: selected_price_id,
+                userEmail: "{{ session['email'] }}"
+            })
+        });
+        const data = await res.json();
+        stripe.redirectToCheckout({ sessionId: data.id });
     });
 </script>
 {% endblock %}

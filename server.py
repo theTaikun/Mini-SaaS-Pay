@@ -3,12 +3,20 @@ from flask import Flask, g, redirect, render_template, session, url_for
 import os
 import time
 
-from definitions import close_db, DB_URI, init_engine, init_session_factory, STRIPE_PUBLISHABLE_KEY, STRIPE_RECURRING_PRICE_ID
+from definitions import (
+    close_db,
+    DB_URI,
+    init_engine,
+    init_session_factory,
+    PROD_MAP,
+    STRIPE_PUBLISHABLE_KEY,
+    )
 from models import Base
 from routers.stripe import stripe_bp
 from routers.users import user_bp
+from services.user_service import is_enable_premium_feature, is_enable_ultimate_feature
 
-load_dotenv()
+PRICE_ID_BY_NAME = { PROD_MAP[x]["name"]:PROD_MAP[x]["price_ids"]["monthly"] for x in PROD_MAP }
 
 def create_app(database_url:str = DB_URI):
     app = Flask(__name__)
@@ -54,7 +62,7 @@ def create_app(database_url:str = DB_URI):
             if not session["onboarding_completed"]:
                 return render_template(
                     'onboarding.html',
-                    price_id=STRIPE_RECURRING_PRICE_ID,
+                    prod_map = PRICE_ID_BY_NAME,
                     STRIPE_PUBLISHABLE_KEY=STRIPE_PUBLISHABLE_KEY,
                 )
             return redirect(url_for('dashboard'))
@@ -67,7 +75,8 @@ def create_app(database_url:str = DB_URI):
                 return redirect(url_for('onboarding_page'))
             return render_template(
                 'dashboard.html',
-                price_id=STRIPE_RECURRING_PRICE_ID,
+                is_premium_feature = is_enable_premium_feature(session["id"]),
+                is_ultimate_feature = is_enable_ultimate_feature(session["id"])
         )
         else:
             return redirect(url_for('login_page'))
@@ -78,12 +87,13 @@ def create_app(database_url:str = DB_URI):
         if "id" in session:
             unix_now = time.time()
             if (
-                session["price_id"] == STRIPE_RECURRING_PRICE_ID
-                and unix_now < session["current_period_end"]
+                is_enable_premium_feature(session["id"]) and
+                unix_now < session["current_period_end"]
             ):
                 return render_template(
                     'premium-feature.html',
-                    price_id=STRIPE_RECURRING_PRICE_ID,
+                    is_premium_feature = True,
+                    is_ultimate_feature = is_enable_ultimate_feature(session["id"])
                 )
             else:
                 return redirect(url_for('dashboard'))

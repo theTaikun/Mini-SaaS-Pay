@@ -27,4 +27,5 @@ class User(Base):
     current_period_start = Column(Integer, nullable=True)
     current_period_end = Column(Integer, nullable=True)
     cancel_at_period_end = Column(Boolean, nullable=True)
+    product_id = Column(String, nullable=True)
 
