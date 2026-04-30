@@ -1,9 +1,14 @@
 {% extends 'base.html' %}
 {% block body %}
 <h2>User Dashboard</h2>
+<nav>
     <a href="/dashboard/">Dashboard</a>
     {% if is_premium_feature %}
         <a href="/dashboard/premium-feature">Premium Feature</a>
     {% endif %}
-<a href="/logout">Logout</a>
+    {% if is_ultimate_feature %}
+        <a href="/dashboard/elite-feature">Elite Feature</a>
+    {% endif %}
+    <a href="/logout">Logout</a>
+</nav>
 {% endblock %}

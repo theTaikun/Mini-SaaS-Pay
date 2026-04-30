@@ -107,6 +107,26 @@ def create_app(database_url:str = DB_URI):
         else:
             return redirect(url_for('login_page'))
 
+
+    @app.route("/dashboard/elite-feature/")
+    def elite_feature():
+        if "id" in session:
+            unix_now = time.time()
+            if (
+                is_enable_ultimate_feature(session["id"]) and
+                unix_now < session["current_period_end"]
+            ):
+                return render_template(
+                    'ultimate-feature.html',
+                    is_premium_feature = True,
+                    is_ultimate_feature = True
+                )
+            else:
+                return redirect(url_for('dashboard'))
+        else:
+            return redirect(url_for('login_page'))
+
+
     return app
 
 

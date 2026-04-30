@@ -8,11 +8,14 @@
 {% if USE_STRIPE_PRICING_TABLE %}
 {% include './includes/pricing-table.html' %}
 {% else %}
+{# monthly plans only #}
 <form id="form_plan">
     <input type="radio" id="plan_free" name="plan" value="{{ prod_map['free'] }}" />
     <label for="plan_free">Free</label>
     <input type="radio" id="plan_pro" name="plan" value="{{ prod_map['pro'] }}" />
     <label for="plan_pro">Pro</label>
+    <input type="radio" id="plan_elite" name="plan" value="{{ prod_map['elite'] }}" />
+    <label for="plan_pro">Elite</label>
     <button type="submit" id="checkout-button">Submit</button>
 </form>
 <script src="https://js.stripe.com/v3/"></script>
