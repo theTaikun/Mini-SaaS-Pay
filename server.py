@@ -10,11 +10,14 @@ from definitions import (
     init_session_factory,
     PROD_MAP,
     STRIPE_PUBLISHABLE_KEY,
+    STRIPE_PRICING_TABLE_ID,
+    USE_STRIPE_PRICING_TABLE,
     )
 from models import Base
 from routers.stripe import stripe_bp
 from routers.users import user_bp
 from services.user_service import is_enable_premium_feature, is_enable_ultimate_feature
+from services.stripe_service import create_stripe_customer_session
 
 PRICE_ID_BY_NAME = { PROD_MAP[x]["name"]:PROD_MAP[x]["price_ids"]["monthly"] for x in PROD_MAP }
 
@@ -59,11 +62,15 @@ def create_app(database_url:str = DB_URI):
     @app.route("/onboarding/", methods=["GET"])
     def onboarding_page():
         if "id" in session:
+            customer_secret = create_stripe_customer_session(session["customer_id"])
             if not session["onboarding_completed"]:
                 return render_template(
                     'onboarding.html',
                     prod_map = PRICE_ID_BY_NAME,
+                    STRIPE_PRICING_TABLE_ID = STRIPE_PRICING_TABLE_ID,
+                    USE_STRIPE_PRICING_TABLE = USE_STRIPE_PRICING_TABLE ,
                     STRIPE_PUBLISHABLE_KEY=STRIPE_PUBLISHABLE_KEY,
+                    CLIENT_SECRET=customer_secret,
                 )
             return redirect(url_for('dashboard'))
         return redirect(url_for('login_page'))

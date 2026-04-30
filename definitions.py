@@ -25,12 +25,14 @@ from prod_price_ids import (
     ELITE_YEARLY_PRICE_ID,
 )
 
+USE_STRIPE_PRICING_TABLE = True
 
 load_dotenv()
 
 DB_URI = os.getenv("DB_URI")
 PUBLIC_URL = os.getenv("PUBLIC_URL")
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
+STRIPE_PRICING_TABLE_ID = os.getenv("STRIPE_PRICING_TABLE_ID")
 
 
 def init_engine(database_url):

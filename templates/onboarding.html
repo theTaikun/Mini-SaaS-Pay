@@ -5,6 +5,9 @@
 <p>Thank you for creating your account.</p>
 <p>Please choose your plan below.</p>
 
+{% if USE_STRIPE_PRICING_TABLE %}
+{% include './includes/pricing-table.html' %}
+{% else %}
 <form id="form_plan">
     <input type="radio" id="plan_free" name="plan" value="{{ prod_map['free'] }}" />
     <label for="plan_free">Free</label>
@@ -46,4 +49,5 @@
         stripe.redirectToCheckout({ sessionId: data.id });
     });
 </script>
+{% endif %}
 {% endblock %}

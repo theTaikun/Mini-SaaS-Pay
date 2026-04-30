@@ -81,10 +81,10 @@ def create_new_stripe_checkout(user_email, price_id):
 
 
 def create_stripe_customer_session(customer_id):
-    customer_session = stripe.v1.customer_sessions.create({
-        "customer": customer_id,
-        "components": {"pricing_table": {"enabled": True}},
-        })
+    customer_session = stripe.CustomerSession.create(
+        customer = customer_id,
+        components = {"pricing_table": {"enabled": True}},
+        )
     return customer_session.client_secret
 
 
