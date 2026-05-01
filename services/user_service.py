@@ -1,6 +1,4 @@
-from flask import g
 from sqlalchemy import select, update
-from sqlalchemy.dialects.sqlite import insert
 
 from definitions import get_db, PROD_MAP
 from models import User
@@ -13,10 +11,11 @@ def create_user(username, password):
         )
     with get_db() as conn:
         conn.add(user)
-        id = user.id
+        user_id = user.id # must capture because 'user' disappears after commit
         conn.commit() # this line will raise exception if unique constraint fail
 
-    return id
+    return user_id
+
 
 def login_user(username, password):
     stmt = (
@@ -32,8 +31,8 @@ def login_user(username, password):
         del res_dict["password"]
         del res_dict["_sa_instance_state"]
         return res_dict
-    else:
-        return None
+    return None
+
 
 def complete_onboarding(app_user_id):
     stmt = (

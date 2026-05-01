@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import Column, Boolean, DateTime, Integer, String
+from sqlalchemy import Column, Boolean, Integer, String
 from sqlalchemy.orm import  declarative_base
 
 Base = declarative_base()
@@ -28,4 +28,3 @@ class User(Base):
     current_period_end = Column(Integer, nullable=True)
     cancel_at_period_end = Column(Boolean, nullable=True)
     product_id = Column(String, nullable=True)
-

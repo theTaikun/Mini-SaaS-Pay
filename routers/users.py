@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, redirect, request, session, url_for
+from sqlalchemy.exc import IntegrityError
 
 from services.user_service import complete_onboarding, create_user, login_user
 from services.stripe_service import create_stripe_customer
@@ -21,11 +22,11 @@ def new_user_endpoint():
     data = request.json
     try:
         app_user_id = create_user(username=data["email"], password=data["password"])
-    except:
+    except IntegrityError:
         return jsonify(error="user already exists"), 409
 
     # TODO: Pass app_user_id rather than email?
-    stripe_customer = create_stripe_customer(data["email"])
+    create_stripe_customer(data["email"])
 
     return { "id": app_user_id }, 201
 
@@ -36,13 +37,10 @@ def login_endpoint():
     if res_dict:
         session.update(res_dict)
         return jsonify({"status":"Success"}), 200
-    else:
-        return jsonify({"status":"Invalid Login"}), 401
+    return jsonify({"status":"Invalid Login"}), 401
 
 
 @user_bp.route("/logout/")
 def logout():
     session.clear()
     return redirect(url_for('home'))
-
-

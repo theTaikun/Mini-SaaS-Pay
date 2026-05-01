@@ -1,7 +1,7 @@
-from dotenv import load_dotenv
-from flask import Flask, g, redirect, render_template, session, url_for
 import os
 import time
+
+from flask import Flask, redirect, render_template, session, url_for
 
 from definitions import (
     close_db,
@@ -85,8 +85,7 @@ def create_app(database_url:str = DB_URI):
                 is_premium_feature = is_enable_premium_feature(session["id"]),
                 is_ultimate_feature = is_enable_ultimate_feature(session["id"])
         )
-        else:
-            return redirect(url_for('login_page'))
+        return redirect(url_for('login_page'))
 
 
     @app.route("/dashboard/premium-feature/")
@@ -102,10 +101,8 @@ def create_app(database_url:str = DB_URI):
                     is_premium_feature = True,
                     is_ultimate_feature = is_enable_ultimate_feature(session["id"])
                 )
-            else:
-                return redirect(url_for('dashboard'))
-        else:
-            return redirect(url_for('login_page'))
+            return redirect(url_for('dashboard'))
+        return redirect(url_for('login_page'))
 
 
     @app.route("/dashboard/elite-feature/")
@@ -121,15 +118,13 @@ def create_app(database_url:str = DB_URI):
                     is_premium_feature = True,
                     is_ultimate_feature = True
                 )
-            else:
-                return redirect(url_for('dashboard'))
-        else:
-            return redirect(url_for('login_page'))
+            return redirect(url_for('dashboard'))
+        return redirect(url_for('login_page'))
 
 
     return app
 
 
 if __name__ == "__main__":
-    app = create_app()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    api = create_app()
+    api.run(host="0.0.0.0", port=5000, debug=True)

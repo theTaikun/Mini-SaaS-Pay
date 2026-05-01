@@ -92,7 +92,11 @@ PROD_MAP = {
         },
     }
 
-DEFAULT_PRICE_ID = [ PROD_MAP[x]["price_ids"]["monthly"] for x in PROD_MAP if  PROD_MAP[x]["name"] == "free"][0]
+DEFAULT_PRICE_ID = [
+     PROD_MAP[x]["price_ids"]["monthly"]
+     for x in PROD_MAP
+     if PROD_MAP[x]["name"] == "free"
+     ][0]
 
 # These should be configured in Stripe itself as well
 # Otherwise listen to all messages and filter them here,
